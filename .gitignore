@@ -1,0 +1,11 @@
+# Antlr generated files
+**/*.java
+**/*.class
+**/*.interp
+**/*.tokens
+
+# Python cache
+**/*.pyc
+
+# Swap files
+**/*.swp
