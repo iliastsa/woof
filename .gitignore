@@ -6,6 +6,10 @@
 
 # Python cache
 **/*.pyc
+**/__pycache/**
 
 # Swap files
 **/*.swp
+
+# PyCharm
+**/.idea/**
