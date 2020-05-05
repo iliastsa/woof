@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import MutableMapping, List, Set
+from typing import MutableMapping, List, Set, Tuple
 
 from src.engine.indexed_relation import IndexedRelation
 from src.meta.atom import Atom
@@ -7,26 +7,38 @@ from src.meta.rule import Rule
 
 
 class Evaluator:
-    def __init__(self, rule: Rule, initial_bindings: MutableMapping, relations: MutableMapping[str, IndexedRelation]):
+    def __init__(self, rule: Rule, relations: MutableMapping[str, IndexedRelation]):
         self.rule: Rule = rule
 
         self.bindings: MutableMapping = dict()
         self.relations = relations
 
-        for predicate in chain([rule.head], rule.body):
-            for variable in predicate.variables:
+        for atom in chain([rule.head], rule.positive_literals):
+            for variable in atom.variables:
                 self.bindings[variable.name] = None
 
-        self.bindings.update(initial_bindings)
+        self.bindings.update(rule.initial_bindings)
 
     def evaluate(self):
-        return self.lookup_join(self.rule.body)
+        for record in self.lookup_join(self.rule.positive_literals):
+            yield from self.filter(record, self.rule.negative_literals)
 
-    def lookup_join(self, predicates: List[Atom]):
-        if len(predicates) == 0:
+    def filter(self, record: Tuple[int, ...], atoms: List[Atom]):
+        if len(atoms) == 0:
+            yield record
+        else:
+            head, rest = atoms[0], atoms[1:]
+
+            tup = self.prepare_tuple(head)
+
+            if not self.relations.get(head.name).member(tup):
+                yield from self.filter(record, rest)
+
+    def lookup_join(self, atoms: List[Atom]):
+        if len(atoms) == 0:
             yield self.prepare_tuple(self.rule.head)
         else:
-            head, rest = predicates[0], predicates[1:]
+            head, rest = atoms[0], atoms[1:]
 
             tup = self.prepare_tuple(head)
 
@@ -38,22 +50,22 @@ class Evaluator:
 
             self.unbind_tuple(rewind_set)
 
-    def prepare_tuple(self, predicate: Atom):
-        return tuple(self.bindings[variable.name] for variable in predicate.variables)
+    def prepare_tuple(self, atom: Atom):
+        return tuple(self.bindings[variable.name] for variable in atom.variables)
 
-    def calculate_rewind_set(self, predicate):
+    def calculate_rewind_set(self, atom):
         rewind_set = set()
 
-        for variable in predicate.variables:
+        for variable in atom.variables:
             if variable.name not in self.bindings:
                 rewind_set.add(variable.name)
 
         return rewind_set
 
-    def bind_tuple(self, record, predicate):
+    def bind_tuple(self, record, atom):
         local_bindings: MutableMapping = dict()
 
-        for value, variable in zip(record, predicate.variables):
+        for value, variable in zip(record, atom.variables):
             if variable.name in local_bindings and local_bindings[variable.name] != value:
                 return False
             else:

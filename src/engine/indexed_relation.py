@@ -64,6 +64,9 @@ class IndexedRelation(Generic[K]):
 
         return self.index_root.lookup(record)
 
+    def member(self, record: Tuple[Optional[K], ...]) -> bool:
+        return record in self.lookup(record)
+
     def insert(self, record: Tuple[K, ...]):
         assert len(record) == self.arity
 
