@@ -22,7 +22,7 @@ class InnerNode(Generic[K], IndexNode[K]):
         if len(rest) == 1:
             self.index[head] = self.index.get(head, LeafNode()).insert(rest)
         else:
-            self.index[head] = self.index.get(head, IndexNode()).insert(rest)
+            self.index[head] = self.index.get(head, InnerNode()).insert(rest)
 
         return self
 
