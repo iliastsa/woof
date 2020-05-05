@@ -1,8 +1,5 @@
 # Antlr generated files
-**/*.java
-**/*.class
-**/*.interp
-**/*.tokens
+src/parser/antlr/*
 
 # Python cache
 **/*.pyc
@@ -13,3 +10,5 @@
 
 # PyCharm
 **/.idea/**
+
+!/**/.gitkeep
