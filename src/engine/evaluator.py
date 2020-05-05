@@ -2,7 +2,7 @@ from itertools import chain
 from typing import MutableMapping, List, Set
 
 from src.engine.indexed_relation import IndexedRelation
-from src.meta.predicate import Predicate
+from src.meta.atom import Atom
 from src.meta.rule import Rule
 
 
@@ -22,7 +22,7 @@ class Evaluator:
     def evaluate(self):
         return self.lookup_join(self.rule.body)
 
-    def lookup_join(self, predicates: List[Predicate]):
+    def lookup_join(self, predicates: List[Atom]):
         if len(predicates) == 0:
             yield self.prepare_tuple(self.rule.head)
         else:
@@ -38,7 +38,7 @@ class Evaluator:
 
             self.unbind_tuple(rewind_set)
 
-    def prepare_tuple(self, predicate: Predicate):
+    def prepare_tuple(self, predicate: Atom):
         return tuple(self.bindings[variable.name] for variable in predicate.variables)
 
     def calculate_rewind_set(self, predicate):

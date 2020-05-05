@@ -3,20 +3,23 @@ grammar Datalog;
 datalogMain : mRule* ;
 
 term
-  : Constant   # Const
-  | Identifier # Variable
+  : value=Constant   # Const
+  | name=Identifier # Variable
   ;
 
-atom : Identifier '(' term ')' ;
+atom : name=Identifier '(' terms=termList? ')' ;
 
-mRule : atom (':-' literals)? '.' ;
+termList
+  : term (',' term)* ;
+
+mRule : head=atom (':-' body=literals)? '.' ;
 
 literal
   : atom     # LiteralAtom
   | '!' atom # LiteralNegAtom
   ;
 
-literals : literal (',' literals)* ;
+literals : literal (',' literal)* ;
 
 Identifier : ID_START ID_REST* ;
 
