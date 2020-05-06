@@ -4,7 +4,7 @@ from typing import Tuple
 from src.meta.variable import Variable
 
 
-@dataclass
+@dataclass(frozen=True)
 class Atom:
     name: str
     variables: Tuple[Variable, ...]
