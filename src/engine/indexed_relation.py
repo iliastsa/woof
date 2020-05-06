@@ -30,7 +30,7 @@ class InnerNode(Generic[K], IndexNode[K]):
         head, rest = record[0], record[1:]
 
         if head is not None:
-            yield from (((head, ) + x) for x in self.index.get(head, InnerNode()).lookup(rest))
+            yield from (((head, ) + x) for x in self.index.get(head, InnerNode() if len(rest) > 1 else LeafNode()).lookup(rest))
         else:
             for key, value in self.index.items():
                 yield from (((key, ) + x) for x in value.lookup(rest))
@@ -57,6 +57,7 @@ class IndexedRelation(Generic[K]):
         assert arity >= 0
 
         self.arity: int = arity
+        self.size:  int = 0
         self.index_root: IndexNode[K] = LeafNode() if arity <= 1 else InnerNode()
 
     def lookup(self, record: Tuple[Optional[K], ...]):
@@ -70,4 +71,8 @@ class IndexedRelation(Generic[K]):
     def insert(self, record: Tuple[K, ...]):
         assert len(record) == self.arity
 
+        if self.member(record):
+            return
+
         self.index_root.insert(record)
+        self.size += 1
