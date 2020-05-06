@@ -40,7 +40,7 @@ class RuleVisitor(DatalogVisitor):
 
         self.vars.append(Variable(var_id, var_name))
 
-        const_id = self.add_constant(ctx.value)
+        const_id = self.add_constant(ctx.value.text)
         self.initial_bindings[var_name] = const_id
 
     def visitVariable(self, ctx: DatalogParser.VariableContext):

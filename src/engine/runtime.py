@@ -24,26 +24,33 @@ class Runtime:
 
         return new_rel
 
+    def step(self):
+        for i, p_i in self.P.items():
+            self.Q[i] = self.copy_rel(p_i)
+            self.P[i] = IndexedRelation(p_i.arity)
+
+        for rule in self.rules:
+            evaluator = Evaluator(rule, self.Q)
+
+            for tup in evaluator.evaluate():
+                self.P[rule.head.name].insert(tup)
+
+        for i, p_i in self.P.items():
+            self.S[i] = self.copy_rel(p_i)
+            self.P[i] = IndexedRelation(p_i.arity)
+
+        for rule in self.rules:
+            evaluator = Evaluator(rule, self.S)
+
+            for tup in evaluator.evaluate():
+                self.P[rule.head.name].insert(tup)
+
+        for i in range(0):
+            pass
+
     def run(self):
         while True:
-            for i, p_i in self.P.items():
-                self.Q[i] = self.copy_rel(p_i)
-
-            for rule in self.rules:
-                evaluator = Evaluator(rule, self.Q)
-
-                for tup in evaluator.evaluate():
-                    self.P[rule.head.name].insert(tup)
-
-            for i, p_i in self.P.items():
-                self.S[i] = self.copy_rel(p_i)
-                self.P[i] = IndexedRelation(p_i.arity)
-
-            for rule in self.rules:
-                evaluator = Evaluator(rule, self.S)
-
-                for tup in evaluator.evaluate():
-                    self.P[rule.head.name].insert(tup)
+            self.step()
 
             for i in self.P.keys():
                 if self.P[i].size != self.Q[i].size:
@@ -51,4 +58,4 @@ class Runtime:
             else:
                 break
 
-        return self.P
+        return self.P, self.S

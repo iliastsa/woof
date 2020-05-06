@@ -57,7 +57,7 @@ class Evaluator:
         rewind_set = set()
 
         for variable in atom.variables:
-            if variable.name not in self.bindings:
+            if self.bindings[variable.name]:
                 rewind_set.add(variable.name)
 
         return rewind_set

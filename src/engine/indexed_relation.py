@@ -8,6 +8,9 @@ class IndexNode(Generic[K]):
     def insert(self, record: Tuple[K, ...]) -> 'IndexNode[K]':
         raise NotImplementedError()
 
+    def contains(self, record: Tuple[K, ...]) -> bool:
+        raise NotImplementedError()
+
     def lookup(self, record: Tuple[Optional[K], ...]) -> Sequence[K]:
         raise NotImplementedError()
 
@@ -26,11 +29,22 @@ class InnerNode(Generic[K], IndexNode[K]):
 
         return self
 
+    def contains(self, record: Tuple[K, ...]) -> bool:
+        head, rest = record[0], record[1:]
+
+        if head in self.index:
+            return self.index[head].contains(rest)
+        else:
+            return False
+
     def lookup(self, record: Tuple[Optional[K], ...]) -> Sequence[K]:
         head, rest = record[0], record[1:]
 
         if head is not None:
-            yield from (((head, ) + x) for x in self.index.get(head, InnerNode() if len(rest) > 1 else LeafNode()).lookup(rest))
+            if head not in self.index:
+                self.index[head] = InnerNode() if len(rest) > 1 else LeafNode()
+
+            yield from (((head, ) + x) for x in self.index[head].lookup(rest))
         else:
             for key, value in self.index.items():
                 yield from (((key, ) + x) for x in value.lookup(rest))
@@ -44,6 +58,9 @@ class LeafNode(Generic[K], IndexNode[K]):
         self.data.add(record)
 
         return self
+
+    def contains(self, record: Tuple[K, ...]) -> bool:
+        return record in self.data
 
     def lookup(self, record: Tuple[Optional[K], ...]) -> Sequence[K]:
         if record == () or record == (None, ):
@@ -66,7 +83,7 @@ class IndexedRelation(Generic[K]):
         return self.index_root.lookup(record)
 
     def member(self, record: Tuple[Optional[K], ...]) -> bool:
-        return record in self.lookup(record)
+        return self.index_root.contains(record)
 
     def insert(self, record: Tuple[K, ...]):
         assert len(record) == self.arity
@@ -76,3 +93,9 @@ class IndexedRelation(Generic[K]):
 
         self.index_root.insert(record)
         self.size += 1
+
+    def __str__(self):
+        return f'{", ".join(str(x) for x in self)}'
+
+    def __iter__(self):
+        return self.lookup((None, ) * self.arity)
