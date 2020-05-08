@@ -20,5 +20,5 @@ if __name__ == '__main__':
 
     true_facts, t_u_dk = engine.run()
 
-    for i, p in P.items():
+    for i, p in true_facts.items():
         print(f'{i}: ', p)

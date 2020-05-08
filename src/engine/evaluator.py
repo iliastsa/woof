@@ -1,13 +1,13 @@
 from itertools import chain
 from typing import MutableMapping, List, Set, Tuple
 
-from src.engine.indexed_relation import IndexedRelation
+from src.engine.relation import Relation
 from src.meta.atom import Atom
 from src.meta.rule import Rule
 
 
 class Evaluator:
-    def __init__(self, rule: Rule, relations: MutableMapping[str, IndexedRelation]):
+    def __init__(self, rule: Rule, relations: MutableMapping[str, Relation]):
         self.rule: Rule = rule
 
         self.bindings: MutableMapping = dict()

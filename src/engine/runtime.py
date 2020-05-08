@@ -2,14 +2,16 @@ from typing import MutableMapping, List
 
 from src.engine.evaluator import Evaluator
 from src.engine.indexed_relation import IndexedRelation
+from src.engine.relation import Relation
+from src.engine.universe_relation import UniverseRelation
 from src.meta.rule import Rule
 
 
 class Runtime:
-    def __init__(self, rules: List[Rule]):
-        self.P: MutableMapping[str, IndexedRelation] = {}
-        self.Q: MutableMapping[str, IndexedRelation] = {}
-        self.S: MutableMapping[str, IndexedRelation] = {}
+    def __init__(self, rules: List[Rule], universe: UniverseRelation):
+        self.P: MutableMapping[str, Relation] = {'_U': universe}
+        self.Q: MutableMapping[str, Relation] = {'_U': universe}
+        self.S: MutableMapping[str, Relation] = {'_U': universe}
 
         self.rules = rules
 
@@ -17,7 +19,10 @@ class Runtime:
             self.P[head.name] = IndexedRelation(len(head.variables))
 
     def step(self):
-        def copy_rel(inp: IndexedRelation):
+        def copy_rel(inp: Relation):
+            if isinstance(inp, UniverseRelation):
+                return inp
+
             new_rel = IndexedRelation(inp.arity)
 
             for rec in inp.lookup((None,) * inp.arity):
@@ -26,6 +31,9 @@ class Runtime:
             return new_rel
 
         for i, p_i in self.P.items():
+            if i == '_U':
+                continue
+
             self.Q[i] = copy_rel(p_i)
             self.P[i] = IndexedRelation(p_i.arity)
 
@@ -36,6 +44,9 @@ class Runtime:
                 self.P[rule.head.name].insert(tup)
 
         for i, p_i in self.P.items():
+            if i == '_U':
+                continue
+
             self.S[i] = copy_rel(p_i)
             self.P[i] = IndexedRelation(p_i.arity)
 
@@ -44,9 +55,6 @@ class Runtime:
 
             for tup in evaluator.evaluate():
                 self.P[rule.head.name].insert(tup)
-
-        for i in range(0):
-            pass
 
     def run(self):
         while True:

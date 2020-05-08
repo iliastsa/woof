@@ -13,15 +13,15 @@ class UniverseRelation(IndexedRelation[K]):
 
         self.size: int = max_id + 1
 
-    def lookup(self, record: Tuple[Optional[K], ...]) -> Generator[Tuple[K, ...]]:
+    def lookup(self, record: Tuple[Optional[K], ...]) -> Generator[Tuple[K, ...], None, None]:
         assert len(record) == 1
 
         value, = record
 
         if value is None:
-            return range(0, self.size)
+            yield from ((x, ) for x in range(0, self.size))
 
-        if 0 <= value < self.size:
+        elif 0 <= value < self.size:
             yield record
 
     def member(self, record: Tuple[Optional[K], ...]) -> bool:
