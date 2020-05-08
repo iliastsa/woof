@@ -16,17 +16,17 @@ class Runtime:
         for head in set(_head for _head in (rule.head for rule in rules)):
             self.P[head.name] = IndexedRelation(len(head.variables))
 
-    def copy_rel(self, inp: IndexedRelation):
-        new_rel = IndexedRelation(inp.arity)
-
-        for tup in inp.lookup((None, ) * inp.arity):
-            new_rel.insert(tup)
-
-        return new_rel
-
     def step(self):
+        def copy_rel(inp: IndexedRelation):
+            new_rel = IndexedRelation(inp.arity)
+
+            for rec in inp.lookup((None,) * inp.arity):
+                new_rel.insert(rec)
+
+            return new_rel
+
         for i, p_i in self.P.items():
-            self.Q[i] = self.copy_rel(p_i)
+            self.Q[i] = copy_rel(p_i)
             self.P[i] = IndexedRelation(p_i.arity)
 
         for rule in self.rules:
@@ -36,7 +36,7 @@ class Runtime:
                 self.P[rule.head.name].insert(tup)
 
         for i, p_i in self.P.items():
-            self.S[i] = self.copy_rel(p_i)
+            self.S[i] = copy_rel(p_i)
             self.P[i] = IndexedRelation(p_i.arity)
 
         for rule in self.rules:
