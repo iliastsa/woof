@@ -1,5 +1,7 @@
 from sortedcontainers import SortedDict, SortedSet
-from typing import Generic, TypeVar, MutableMapping, Tuple, MutableSet, Sequence, Optional
+from typing import Generic, TypeVar, MutableMapping, Tuple, MutableSet, Optional, Generator
+
+from src.engine.relation import Relation
 
 K = TypeVar('K')
 
@@ -11,7 +13,7 @@ class IndexNode(Generic[K]):
     def contains(self, record: Tuple[K, ...]) -> bool:
         raise NotImplementedError()
 
-    def lookup(self, record: Tuple[Optional[K], ...]) -> Sequence[K]:
+    def lookup(self, record: Tuple[Optional[K], ...]) -> Generator[Tuple[K, ...], None, None]:
         raise NotImplementedError()
 
 
@@ -37,7 +39,7 @@ class InnerNode(Generic[K], IndexNode[K]):
         else:
             return False
 
-    def lookup(self, record: Tuple[Optional[K], ...]) -> Sequence[K]:
+    def lookup(self, record: Tuple[Optional[K], ...]) -> Generator[Tuple[K, ...], None, None]:
         head, rest = record[0], record[1:]
 
         if head is not None:
@@ -62,22 +64,20 @@ class LeafNode(Generic[K], IndexNode[K]):
     def contains(self, record: Tuple[K, ...]) -> bool:
         return record in self.data
 
-    def lookup(self, record: Tuple[Optional[K], ...]) -> Sequence[K]:
+    def lookup(self, record: Tuple[Optional[K], ...]) -> Generator[Tuple[K, ...], None, None]:
         if record == () or record == (None, ):
             yield from self.data
         elif record in self.data:
             yield record
 
 
-class IndexedRelation(Generic[K]):
+class IndexedRelation(Relation[K]):
     def __init__(self, arity: int):
-        assert arity >= 0
+        super().__init__(arity)
 
-        self.arity: int = arity
-        self.size:  int = 0
         self.index_root: IndexNode[K] = LeafNode() if arity <= 1 else InnerNode()
 
-    def lookup(self, record: Tuple[Optional[K], ...]):
+    def lookup(self, record: Tuple[Optional[K], ...]) -> Generator[Tuple[K, ...], None, None]:
         assert len(record) == self.arity
 
         return self.index_root.lookup(record)
@@ -85,7 +85,7 @@ class IndexedRelation(Generic[K]):
     def member(self, record: Tuple[Optional[K], ...]) -> bool:
         return self.index_root.contains(record)
 
-    def insert(self, record: Tuple[K, ...]):
+    def insert(self, record: Tuple[K, ...]) -> None:
         assert len(record) == self.arity
 
         if self.member(record):
@@ -93,9 +93,3 @@ class IndexedRelation(Generic[K]):
 
         self.index_root.insert(record)
         self.size += 1
-
-    def __str__(self):
-        return f'{", ".join(str(x) for x in self)}'
-
-    def __iter__(self):
-        return self.lookup((None, ) * self.arity)
