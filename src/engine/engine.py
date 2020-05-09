@@ -19,6 +19,7 @@ class Engine:
     def __init__(self, stream: InputStream):
         self.stream: InputStream = stream
         self.id_to_const: Mapping[int, str] = {}
+        self.predicates: Mapping[str, int] = {}
 
         self.variable_id: int = 0
 
@@ -67,11 +68,26 @@ class Engine:
         self.rules = visitor.rules
         self.variable_id = visitor.variable_id
         self.id_to_const = visitor.id_to_str
+        self.predicates = visitor.predicates
 
         self._fix_rules()
 
         self._u = UniverseRelation(len(self.id_to_const) - 1)
 
-        self.p, self.q = Runtime(visitor.rules, self._u).run()
+        self.p, self.q = Runtime(visitor.rules, self.predicates, self._u).run()
 
         return self.p, self.q
+
+    def print_all(self):
+        print("True")
+
+        for i, q_i in self.q.items():
+            print(f'{i}:', *(tuple(map(lambda y: self.id_to_const[y], x)) for x in q_i))
+
+        print()
+        print()
+
+        print("Unknown")
+
+        for i, p_i in self.p.items():
+            print(f'{i}:', *(tuple(map(lambda y: self.id_to_const[y], x)) for x in p_i if not self.q[i].member(x)))

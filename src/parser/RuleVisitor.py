@@ -5,11 +5,13 @@ from src.meta.variable import Variable
 from src.parser.antlr.DatalogVisitor import DatalogVisitor
 from src.parser.antlr.DatalogParser import DatalogParser
 from src.meta.rule import Rule
+from src.parser.exceptions.ArityException import ArityException
 
 
 class RuleVisitor(DatalogVisitor):
     def __init__(self):
         self.rules: List[Rule] = []
+        self.predicates: MutableMapping[str, int] = {}
 
         self.str_to_id: MutableMapping[str, int] = {}
         self.id_to_str: MutableMapping[int, str] = {}
@@ -52,7 +54,13 @@ class RuleVisitor(DatalogVisitor):
     def visitAtom(self, ctx: DatalogParser.AtomContext):
         self.reset_atom_state()
 
-        self.visitTermList(ctx.terms)
+        if ctx.terms:
+            self.visitTermList(ctx.terms)
+
+        if ctx.name.text in self. predicates and self.predicates[ctx.name.text] != len(self.vars):
+            raise ArityException((ctx.start.line, ctx.start.column, Atom(ctx.name.text, tuple(self.vars))))
+
+        self.predicates[ctx.name.text] = len(self.vars)
 
         return Atom(ctx.name.text, tuple(self.vars))
 
@@ -72,6 +80,7 @@ class RuleVisitor(DatalogVisitor):
         self.n_literals = []
 
     def add_constant(self, constant: str) -> int:
+        constant = constant[1:-1]
         if constant in self.str_to_id:
             return self.str_to_id[constant]
         else:

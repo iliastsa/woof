@@ -1,4 +1,4 @@
-from typing import MutableMapping, List
+from typing import MutableMapping, List, Mapping, Set
 
 from src.engine.evaluator import Evaluator
 from src.engine.indexed_relation import IndexedRelation
@@ -8,15 +8,15 @@ from src.meta.rule import Rule
 
 
 class Runtime:
-    def __init__(self, rules: List[Rule], universe: UniverseRelation):
+    def __init__(self, rules: List[Rule], predicates: Mapping[str, int], universe: UniverseRelation):
         self.P: MutableMapping[str, Relation] = {'_U': universe}
         self.Q: MutableMapping[str, Relation] = {'_U': universe}
         self.S: MutableMapping[str, Relation] = {'_U': universe}
 
         self.rules = rules
 
-        for head in set(_head for _head in (rule.head for rule in rules)):
-            self.P[head.name] = IndexedRelation(len(head.variables))
+        for name, arity in predicates.items():
+            self.P[name] = IndexedRelation(arity)
 
     def step(self):
         def copy_rel(inp: Relation):
