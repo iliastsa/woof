@@ -1,0 +1,9 @@
+moves("b", "c").
+moves("c", "a").
+moves("a", "b").
+moves("a", "d").
+moves("d", "e").
+moves("d", "f").
+moves("f", "g").
+
+win(x) :- moves(x, y), !win(y).
