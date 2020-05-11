@@ -11,4 +11,7 @@ src/parser/antlr/*
 # PyCharm
 **/.idea/**
 
+# Ignore facts
+**/*.facts
+
 !/**/.gitkeep
