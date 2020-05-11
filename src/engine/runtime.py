@@ -1,4 +1,4 @@
-from typing import MutableMapping, List, Mapping, Set
+from typing import MutableMapping, List, Mapping
 
 from src.engine.evaluator import Evaluator
 from src.engine.indexed_relation import IndexedRelation
