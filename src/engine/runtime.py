@@ -30,12 +30,15 @@ class Runtime:
 
             return new_rel
 
-        for i, p_i in self.P.items():
-            if i == '_U':
-                continue
+        def copy_and_reset(src: MutableMapping[str, Relation], dest: MutableMapping[str, Relation]):
+            for i, rel in src.items():
+                if i == '_U':
+                    continue
 
-            self.Q[i] = copy_rel(p_i)
-            self.P[i] = IndexedRelation(p_i.arity)
+                dest[i] = copy_rel(rel)
+                src[i] = IndexedRelation(rel.arity)
+
+        copy_and_reset(self.P, self.Q)
 
         for rule in self.rules:
             evaluator = Evaluator(rule, self.Q)
@@ -43,12 +46,7 @@ class Runtime:
             for tup in evaluator.evaluate():
                 self.P[rule.head.name].insert(tup)
 
-        for i, p_i in self.P.items():
-            if i == '_U':
-                continue
-
-            self.S[i] = copy_rel(p_i)
-            self.P[i] = IndexedRelation(p_i.arity)
+        copy_and_reset(self.P, self.S)
 
         for rule in self.rules:
             evaluator = Evaluator(rule, self.S)

@@ -1,7 +1,7 @@
 import os
 from collections import Mapping
 from itertools import chain
-from typing import List
+from typing import List, Tuple
 
 from antlr4 import InputStream
 
@@ -77,19 +77,22 @@ class Engine:
 
         self.unknown_or_true_facts, self.true_facts = Runtime(visitor.rules, self.predicates, self._u).run()
 
+    def _render_record(self, record: Tuple[int, ...]) -> Tuple[str, ...]:
+        return tuple(map(lambda y: self.id_to_const[y], record))
+
     def _output_rel(self, relation: str, output_dir: str):
         filename = f'{relation}_true.facts'
 
         with open(os.path.join(output_dir, filename), 'w') as f:
             for record in self.true_facts[relation]:
-                f.write(f'{", ".join(tuple(map(lambda y: self.id_to_const[y], record)))}\n')
+                f.write(f'{", ".join(self._render_record(record))}\n')
 
         filename = f'{relation}_unknown.facts'
 
         with open(os.path.join(output_dir, filename), 'w') as f:
             for record in self.unknown_or_true_facts[relation]:
                 if not self.true_facts[relation].member(record):
-                    f.write(f'{", ".join(tuple(map(lambda y: self.id_to_const[y], record)))}\n')
+                    f.write(f'{", ".join(self._render_record(record))}\n')
 
     def output_all(self, output_dir):
         for relation in self.true_facts:
@@ -101,7 +104,7 @@ class Engine:
 
         for i, q_i in self.true_facts.items():
             if not i == '_U':
-                print(f'{i}:', *(tuple(map(lambda y: self.id_to_const[y], x)) for x in q_i))
+                print(f'{i}:', *(self._render_record(x) for x in q_i))
 
         print()
         print()
@@ -110,4 +113,4 @@ class Engine:
 
         for i, p_i in self.unknown_or_true_facts.items():
             if not i == '_U':
-                print(f'{i}:', *(tuple(map(lambda y: self.id_to_const[y], x)) for x in p_i if not self.true_facts[i].member(x)))
+                print(f'{i}:', *(self._render_record(x) for x in p_i if not self.true_facts[i].member(x)))
