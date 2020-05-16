@@ -13,46 +13,50 @@ class Runtime:
         self.Q: MutableMapping[str, Relation] = {'_U': universe}
         self.S: MutableMapping[str, Relation] = {'_U': universe}
 
-        self.rules = rules
+        self.universe: Relation = universe
+        self.predicates: Mapping[str, int] = predicates
+        self.rules: List[Rule] = rules
 
         for name, arity in predicates.items():
             self.P[name] = IndexedRelation(arity)
 
+    def inner_step(self, edb_relations: Mapping[str, Relation]) -> Mapping[str, Relation]:
+        idb_relations: MutableMapping[str, Relation] = {'_U': self.universe}
+
+        for name, arity in self.predicates.items():
+            idb_relations[name] = IndexedRelation(arity)
+
+        change = True
+        while change:
+            change = False
+
+            for rule in self.rules:
+                evaluator = Evaluator(rule, idb_relations, edb_relations)
+
+                for rec in evaluator.evaluate():
+                    if rec not in idb_relations[rule.head.name]:
+                        idb_relations[rule.head.name].insert(rec)
+
+                        change = True
+
+        return idb_relations
+
     def step(self):
-        def copy_rel(inp: Relation):
-            if isinstance(inp, UniverseRelation):
-                return inp
-
-            new_rel = IndexedRelation(inp.arity)
-
-            for rec in inp.lookup((None,) * inp.arity):
-                new_rel.insert(rec)
-
-            return new_rel
-
         def copy_and_reset(src: MutableMapping[str, Relation], dest: MutableMapping[str, Relation]):
             for i, rel in src.items():
                 if i == '_U':
                     continue
 
-                dest[i] = copy_rel(rel)
+                dest[i] = rel.copy()
                 src[i] = IndexedRelation(rel.arity)
 
         copy_and_reset(self.P, self.Q)
 
-        for rule in self.rules:
-            evaluator = Evaluator(rule, self.Q)
-
-            for tup in evaluator.evaluate():
-                self.P[rule.head.name].insert(tup)
+        self.P.update(self.inner_step(self.Q))
 
         copy_and_reset(self.P, self.S)
 
-        for rule in self.rules:
-            evaluator = Evaluator(rule, self.S)
-
-            for tup in evaluator.evaluate():
-                self.P[rule.head.name].insert(tup)
+        self.P.update(self.inner_step(self.S))
 
     def run(self):
         while True:

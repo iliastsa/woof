@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import MutableMapping, List, Set, Tuple
+from typing import MutableMapping, Mapping, List, Set, Tuple
 
 from src.engine.relation import Relation
 from src.meta.atom import Atom
@@ -7,11 +7,17 @@ from src.meta.rule import Rule
 
 
 class Evaluator:
-    def __init__(self, rule: Rule, relations: MutableMapping[str, Relation]):
+    def __init__(
+            self,
+            rule: Rule,
+            idb_relations: MutableMapping[str, Relation],
+            edb_relations: Mapping[str, Relation]):
+
         self.rule: Rule = rule
 
         self.bindings: MutableMapping = dict()
-        self.relations = relations
+        self.idb_relations = idb_relations
+        self.edb_relations = edb_relations
 
         for atom in chain([rule.head], rule.positive_literals):
             for variable in atom.variables:
@@ -31,7 +37,7 @@ class Evaluator:
 
             tup = self.prepare_tuple(head)
 
-            if not self.relations.get(head.name).member(tup):
+            if not self.edb_relations.get(head.name).member(tup):
                 yield from self.filter(record, rest)
 
     def lookup_join(self, atoms: List[Atom]):
@@ -44,7 +50,7 @@ class Evaluator:
 
             rewind_set = self.calculate_rewind_set(head)
 
-            for record in self.relations.get(head.name).lookup(tup):
+            for record in self.idb_relations.get(head.name).lookup(tup):
                 if self.bind_tuple(record, head):
                     yield from self.lookup_join(rest)
 

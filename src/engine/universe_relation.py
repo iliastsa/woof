@@ -1,11 +1,11 @@
 from typing import Tuple, Optional, TypeVar, Generator
 
-from src.engine.indexed_relation import IndexedRelation
+from src.engine.relation import Relation
 
 K = TypeVar('K')
 
 
-class UniverseRelation(IndexedRelation[K]):
+class UniverseRelation(Relation[K]):
     def __init__(self, max_id: int):
         super(UniverseRelation, self).__init__(1)
 
@@ -29,3 +29,6 @@ class UniverseRelation(IndexedRelation[K]):
 
     def insert(self, record: Tuple[K, ...]) -> None:
         pass
+
+    def copy(self) -> Relation[K]:
+        return self

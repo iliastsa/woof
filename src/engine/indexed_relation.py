@@ -93,3 +93,11 @@ class IndexedRelation(Relation[K]):
 
         self.index_root.insert(record)
         self.size += 1
+
+    def copy(self) -> Relation[K]:
+        new_rel = IndexedRelation(self.arity)
+
+        for rec in self:
+            new_rel.insert(rec)
+
+        return new_rel

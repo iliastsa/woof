@@ -19,6 +19,9 @@ class Relation(Generic[K]):
     def insert(self, record: Tuple[K, ...]) -> None:
         raise NotImplementedError
 
+    def copy(self) -> 'Relation[K]':
+        raise NotImplementedError
+
     def __str__(self):
         return f'{", ".join(str(x) for x in self)}'
 
