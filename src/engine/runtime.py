@@ -68,4 +68,4 @@ class Runtime:
             else:
                 break
 
-        return self.P, self.S
+        return self.S, self.P
