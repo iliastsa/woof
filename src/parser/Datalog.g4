@@ -1,13 +1,13 @@
 grammar Datalog;
 
-datalogMain : mRule* ;
+datalogMain : mRule* EOF;
 
 term
   : value=Constant   # Const
   | name=Identifier # Variable
   ;
 
-atom : name=Identifier '(' terms=termList? ')' ;
+atom : name=Identifier ('(' terms=termList? ')')? ;
 
 termList
   : term (',' term)* ;
